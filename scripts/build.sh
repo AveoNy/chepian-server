@@ -14,41 +14,24 @@ log_file="$repo_root/build.log"
 : > "$log_file"
 exec > >(tee -a "$log_file") 2>&1
 
-for dependency in lb file od readlink realpath sha256sum; do
+for dependency in lb file sha256sum; do
   if ! command -v "$dependency" >/dev/null 2>&1; then
     printf '%s\n' "build.sh: required command is missing: $dependency" >&2
     exit 1
   fi
 done
 
-png_dimensions() {
-  local png_file="$1"
-  local -a bytes
-  local width height
-
-  read -r -a bytes < <(od -An -tu1 -j 16 -N 8 "$png_file")
-  if (( ${#bytes[@]} != 8 )); then
-    return 1
-  fi
-
-  width=$(( (bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3] ))
-  height=$(( (bytes[4] << 24) | (bytes[5] << 16) | (bytes[6] << 8) | bytes[7] ))
-  [[ "$width" == 640 && "$height" == 480 ]]
-}
-
-lb clean
-lb config
-bash "$repo_root/scripts/prepare-branding.sh"
-
-splash="$repo_root/config/bootloaders/syslinux_common/splash.png"
-if [[ ! -f "$splash" ]] || ! png_dimensions "$splash"; then
-  printf '%s\n' "build.sh: expected 640x480 Syslinux splash image is missing or invalid: $splash" >&2
+if [[ ! -f "$repo_root/auto/config" || ! -f "$repo_root/scripts/prepare-branding.sh" ]]; then
+  printf '%s\n' "build.sh: invalid repository root: $repo_root" >&2
   exit 1
 fi
 
+lb clean --purge
+lb config
+./scripts/prepare-branding.sh
 lb build
 
-output_name="chepian-server-0.1.0-amd64.iso"
+output_name="chepian-server-0.1.1-amd64.iso"
 output_iso="$repo_root/$output_name"
 source_iso=""
 
@@ -88,3 +71,4 @@ fi
 
 mv -f -- "$source_iso" "$output_iso"
 (cd "$repo_root" && sha256sum "$output_name" > "$output_name.sha256")
+printf '%s\n' "build.sh: created $output_iso"

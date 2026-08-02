@@ -24,6 +24,7 @@ required_files=(
   config/includes.chroot/etc/issue.net
   config/includes.chroot/etc/motd
   config/hooks/live/0100-chepian-config.hook.chroot
+  assets/chepian-apple.svg
   assets/chepian-splash.png
   scripts/build.sh
   scripts/clean.sh
@@ -33,6 +34,7 @@ required_files=(
   tests/test-package.sh
   tests/test-doctor.sh
   docs/architecture.md
+  docs/releases/0.1.1.md
 )
 
 for file in "${required_files[@]}"; do
@@ -79,7 +81,17 @@ if [[ ! -s assets/chepian-splash.png ]]; then
   exit 1
 fi
 
-for field in 'ID=chepian' 'ID_LIKE=debian'; do
+if grep -qF 'rm -rf' scripts/prepare-branding.sh; then
+  printf '%s\n' 'check.sh: prepare-branding.sh must not use rm -rf' >&2
+  exit 1
+fi
+
+if grep -Eq '(rm|mv|chmod|find)[^\n]*/usr/share/live/build' scripts/prepare-branding.sh; then
+  printf '%s\n' 'check.sh: prepare-branding.sh must not modify live-build templates' >&2
+  exit 1
+fi
+
+for field in 'ID=chepian' 'ID_LIKE=debian' 'VERSION_ID="0.1.1"'; do
   if ! grep -qxF "$field" config/includes.chroot/usr/lib/os-release; then
     printf '%s\n' "check.sh: os-release is missing $field" >&2
     exit 1

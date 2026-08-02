@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-CHEP_VERSION="0.2.0-dev"
+CHEP_VERSION="0.1.1"
 export CHEP_PROGRAM="$0"
 CHEP_LIB_DIR="${CHEP_LIB_DIR:-/usr/lib/chep}"
 

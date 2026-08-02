@@ -8,8 +8,7 @@
 - Do not run destructive disk commands, including partitioning, formatting, or raw-device writes.
 - Do not modify files outside this repository.
 - Do not add passwords, private keys, tokens, or other secrets.
-- Chep doctor collection must remain allowlisted and redact credentials; do not add profiles or bundles during the 0.2.0-dev Offline Ops Preview.
-- Treat 0.2.0-dev as a development preview; do not present it as the final 0.2.0 release.
+- Chep doctor collection must remain allowlisted and redact credentials; do not add profiles or bundles in the 0.1.1 Diagnostics release.
 - Do not commit ISO files, live-build output, caches, or chroots.
 - Do not perform `git commit` or `git push` automatically.
 - Run `scripts/check.sh` after changes. After branding changes, perform a full clean ISO rebuild on the Debian builder.

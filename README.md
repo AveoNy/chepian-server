@@ -1,12 +1,12 @@
 # Chepian Server
 
-> Development preview: `0.2.0-dev` adds modular Chep operations and offline-safe diagnostics. It is not a final 0.2.0 release.
+> `0.1.1` is the Diagnostics checkpoint after 0.1.0. It remains a minimal server ISO and does not include profiles, bundles, or heavyweight orchestration dependencies.
 
 Chepian Server is a minimal, text-only Debian 13 (trixie) live server ISO for amd64 systems. It supports BIOS and UEFI boot, includes the text Debian Installer, and has no graphical environment.
 
 ## Defaults
 
-- Version: `0.2.0-dev`
+- Version: `0.1.1`
 - Live hostname: `chepian`
 - Live user: `chep`
 - Primary locale: `en_US.UTF-8`
@@ -17,7 +17,7 @@ Chepian Server is a minimal, text-only Debian 13 (trixie) live server ISO for am
 
 `assets/chepian-apple.svg` is the editable original branding source. `assets/chepian-splash.png` is the tracked, ready-to-build 640x480 splash image. The image is a minimal, symmetric red-and-green whole apple without a bite, created for Chepian Server. It is not an Apple Inc. logo or a derivative of a third-party trademark.
 
-Normal builds use the ready PNG and do not require `rsvg-convert` or `librsvg2-bin`. To deliberately replace the PNG from the SVG, run `make branding-regenerate` on Debian; only this mode requires `rsvg-convert` from `librsvg2-bin`. The generated themes copy live-build templates into the repository, set Chepian menu text, and use the PNG through the supported live-build configuration path. BIOS/ISOLINUX is guaranteed to use the graphical splash. UEFI/GRUB remains bootable with textual Chepian branding; its graphical background depends on the live-build template support available on the builder. Generated bootloader files are reproducible and intentionally ignored by Git.
+Normal builds use the ready PNG and do not require `rsvg-convert` or `librsvg2-bin`. After `lb config`, the build copies the stock live-build bootloader templates into the repository, replaces only `syslinux_common/splash.png`, and removes the local `splash.svg`. BIOS/ISOLINUX is guaranteed to use the graphical splash. Generated bootloader files are reproducible and intentionally ignored by Git.
 
 ## Build on Debian 13
 
@@ -29,11 +29,10 @@ sudo apt install -y live-build shellcheck
 git clone https://github.com/AveoNy/chepian-server.git
 cd chepian-server
 make check
-make branding
 sudo ./scripts/build.sh
 ```
 
-The build produces `chepian-server-0.1.0-amd64.iso` and its SHA-256 checksum in the repository root.
+The build produces `chepian-server-0.1.1-amd64.iso` and its SHA-256 checksum in the repository root.
 
 ## Commands
 
@@ -41,7 +40,6 @@ The build produces `chepian-server-0.1.0-amd64.iso` and its SHA-256 checksum in 
 make help
 make check
 make branding
-make branding-regenerate
 make configure
 sudo make build
 sudo make clean
@@ -60,7 +58,7 @@ chep doctor --collect
 
 `doctor` reports system, CPU, memory, disk, network, service, and security observations. Exit codes are `0` (OK), `1` (warnings), `2` (failures), and `3` (usage/internal error). `--collect` creates a redacted support archive and never includes shadow files, SSH keys, environment dumps, history, or credentials.
 
-Chep modules are installed below `/usr/lib/chep`: `common.sh`, `package.sh`, and `doctor.sh`. This Offline Ops Preview does not provide profiles or bundles.
+Chep modules are installed below `/usr/lib/chep`: `common.sh`, `package.sh`, and `doctor.sh`. Profiles and bundles are not included in this release.
 
 ## Layout
 
