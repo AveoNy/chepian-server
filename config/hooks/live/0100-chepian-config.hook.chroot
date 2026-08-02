@@ -15,3 +15,7 @@ printf '%s\n' 'LANG=en_US.UTF-8' > /etc/default/locale
 mkdir -p /etc/ssh/sshd_config.d
 printf '%s\n' 'PermitRootLogin no' > /etc/ssh/sshd_config.d/99-chepian.conf
 systemctl enable ssh.service
+
+if ! systemctl set-default multi-user.target; then
+  ln -sfn /lib/systemd/system/multi-user.target /etc/systemd/system/default.target
+fi

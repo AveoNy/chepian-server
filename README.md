@@ -11,16 +11,23 @@ Chepian Server is a minimal, text-only Debian 13 (trixie) live server ISO for am
 - Additional locale: `ru_RU.UTF-8`
 - SSH: installed and enabled; root SSH login is disabled
 
+## Branding
+
+The original branding source is `assets/chepian-apple.svg`. It is a minimal, symmetric red-and-green whole apple without a bite, created for Chepian Server. It is not an Apple Inc. logo or a derivative of a third-party trademark.
+
+On the Debian builder, `scripts/prepare-branding.sh` renders this SVG deterministically to 640x480 `splash.png` files in generated `config/bootloaders/isolinux/` and `config/bootloaders/grub/`. The generated themes copy live-build templates into the repository, set Chepian menu text, and use the PNG through the supported live-build bootloader configuration path. ISOLINUX is branded for BIOS; GRUB receives the same black-background branding for UEFI. Generated bootloader files are reproducible and intentionally ignored by Git.
+
 ## Build on Debian 13
 
 Run these commands on a Debian 13 amd64 builder, not on Windows:
 
 ```sh
-apt-get update
-apt-get install -y live-build shellcheck
+sudo apt update
+sudo apt install -y live-build shellcheck librsvg2-bin
 git clone https://github.com/AveoNy/chepian-server.git
 cd chepian-server
 make check
+make branding
 sudo make build
 ```
 
@@ -31,6 +38,7 @@ The build produces `chepian-server-0.1.0-amd64.iso` and its SHA-256 checksum in 
 ```sh
 make help
 make check
+make branding
 make configure
 sudo make build
 sudo make clean

@@ -1,5 +1,7 @@
 *.sh text eol=lf
+*.svg text eol=lf
 auto/* text eol=lf
-config/hooks/** text eol=lf
+config/hooks/live/* text eol=lf
 config/includes.chroot/usr/bin/chep text eol=lf
 Makefile text eol=lf
+*.png binary

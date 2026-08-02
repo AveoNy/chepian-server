@@ -4,6 +4,22 @@ Chepian Server is a live-build profile targeting Debian 13 (trixie) on amd64. `a
 
 The image is a `live` system and includes the text Debian Installer through `--debian-installer live`. The package list deliberately contains server and console tooling only; it does not include a display server, desktop environment, browser, display manager, or graphical installer.
 
-`config/includes.chroot` supplies image-specific files. The `chep` command is an argument-safe Bash frontend for package management. The chroot hook applies hostname, locale, OS metadata link, and SSH configuration. It enables `ssh.service` and uses an SSH drop-in to prohibit root login without embedding credentials.
+`config/includes.chroot` supplies image-specific files. The `chep` command is an argument-safe Bash frontend for package management. The chroot hook applies hostname, locale, OS metadata link, and SSH configuration. It enables `ssh.service`, prohibits root SSH login without embedding credentials, and sets `multi-user.target` as the default systemd target. The fallback target symlink is only written if `systemctl set-default` cannot do so in the chroot.
 
-Build artifacts are generated only on a Debian builder. `scripts/build.sh` runs the live-build lifecycle from the repository root, validates the expected hybrid ISO, and writes a versioned ISO plus SHA-256 checksum. `scripts/clean.sh` delegates cleanup to `lb clean --purge` from that same root.
+## Boot Branding
+
+`assets/chepian-apple.svg` is the sole branding source. It is an original, symmetric whole apple: green on the left, red on the right, with no bite. It is not the Apple Inc. logo and does not use third-party artwork.
+
+On a Debian builder, `scripts/prepare-branding.sh` requires `librsvg2-bin` and renders the source SVG to a deterministic 640x480 PNG. The process is:
+
+```text
+assets/chepian-apple.svg
+        -> scripts/prepare-branding.sh
+        -> config/bootloaders/isolinux/splash.png  (BIOS/ISOLINUX)
+        -> config/bootloaders/grub/splash.png      (UEFI/GRUB)
+        -> live-build hybrid ISO
+```
+
+The script copies the live-build bootloader templates from `/usr/share/live/build/bootloaders` only into the repository, then replaces product labels while retaining template kernel and initrd commands. It removes a copied `splash.svg` from each generated theme so it cannot replace `splash.png`. The generated `config/bootloaders/` tree is reproducible, ignored by Git, and is never written to `/usr/share/live/build`.
+
+Build artifacts are generated only on a Debian builder. Install the branding dependency with `sudo apt update` and `sudo apt install -y librsvg2-bin`. Run `make check`, `make branding`, and then `sudo make build`; branding changes require a full clean rebuild. `scripts/build.sh` runs the live-build lifecycle from the repository root, validates both generated splash PNG dimensions, validates the expected hybrid ISO, and writes a versioned ISO plus SHA-256 checksum. `scripts/clean.sh` delegates cleanup to `lb clean --purge` from that same root.
