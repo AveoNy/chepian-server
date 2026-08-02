@@ -119,15 +119,40 @@ for fallback_path in /lib/systemd/system/multi-user.target /etc/systemd/system/d
   fi
 done
 
-if ! grep -qF 'exec sudo --' config/includes.chroot/usr/bin/chep; then
-  printf '%s\n' 'check.sh: chep must safely re-exec through sudo' >&2
+common_module=config/includes.chroot/usr/lib/chep/common.sh
+package_module=config/includes.chroot/usr/lib/chep/package.sh
+dispatcher=config/includes.chroot/usr/bin/chep
+
+for requirement in 'chep_escalate()' 'EUID' 'command -v' 'sudo' 'exec sudo --'; do
+  if ! grep -qF -- "$requirement" "$common_module"; then
+    printf '%s\n' "check.sh: common.sh is missing privilege escalation requirement: $requirement" >&2
+    exit 1
+  fi
+done
+
+if grep -qF 'eval' "$common_module"; then
+  printf '%s\n' 'check.sh: common.sh must not use eval' >&2
   exit 1
 fi
 
-if grep -qF 'eval' config/includes.chroot/usr/bin/chep; then
-  printf '%s\n' 'check.sh: chep must not use eval' >&2
+if ! grep -qF 'chep_escalate' "$package_module"; then
+  printf '%s\n' 'check.sh: package.sh must use chep_escalate for changing operations' >&2
   exit 1
 fi
+
+for read_command in 'apt-cache "$command"' 'dpkg-query -W'; do
+  if ! grep -qF -- "$read_command" "$package_module"; then
+    printf '%s\n' "check.sh: package.sh read operation is missing: $read_command" >&2
+    exit 1
+  fi
+done
+
+for module in common.sh package.sh; do
+  if ! grep -qF "load_module $module" "$dispatcher"; then
+    printf '%s\n' "check.sh: dispatcher does not load $module" >&2
+    exit 1
+  fi
+done
 
 if ! grep -qF "if [[ \"\$regenerate\" == true ]]" scripts/prepare-branding.sh; then
   printf '%s\n' 'check.sh: rsvg-convert must be limited to --regenerate mode' >&2
