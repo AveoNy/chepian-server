@@ -65,7 +65,7 @@ if ! command -v shellcheck >/dev/null 2>&1; then
   exit 1
 fi
 
-shellcheck "${shell_files[@]}"
+shellcheck -x "${shell_files[@]}"
 for file in "${shell_files[@]}"; do
   bash -n "$file"
 done

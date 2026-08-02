@@ -6,6 +6,7 @@
 /build.log
 /*.iso
 /*.iso.sha256
+/chep-doctor-*.tar.gz
 
 # Reproducible bootloader themes generated from the tracked ready splash PNG
 /config/bootloaders/

@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+CHEP_PROGRAM="${CHEP_PROGRAM:-chep}"
+
 chep_package_require_arguments() {
   if (( $# == 0 )); then
     chep_error "${CHEP_PACKAGE_COMMAND:-package command} requires at least one argument"

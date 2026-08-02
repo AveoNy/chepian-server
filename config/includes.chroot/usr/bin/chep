@@ -2,7 +2,7 @@
 set -euo pipefail
 
 CHEP_VERSION="0.2.0-dev"
-CHEP_PROGRAM="$0"
+export CHEP_PROGRAM="$0"
 CHEP_LIB_DIR="${CHEP_LIB_DIR:-/usr/lib/chep}"
 
 usage() {
@@ -24,6 +24,7 @@ load_module() {
     exit 3
   fi
   # Modules are shipped with Chepian and loaded only from CHEP_LIB_DIR.
+  # shellcheck source=/dev/null
   source "$path"
 }
 
