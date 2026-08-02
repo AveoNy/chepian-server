@@ -8,18 +8,19 @@ The image is a `live` system and includes the text Debian Installer through `--d
 
 ## Boot Branding
 
-`assets/chepian-apple.svg` is the sole branding source. It is an original, symmetric whole apple: green on the left, red on the right, with no bite. It is not the Apple Inc. logo and does not use third-party artwork.
+`assets/chepian-apple.svg` is the editable branding source. `assets/chepian-splash.png` is the tracked ready-to-build 640x480 rendering. It is an original, symmetric whole apple: green on the left, red on the right, with no bite. It is not the Apple Inc. logo and does not use third-party artwork.
 
-On a Debian builder, `scripts/prepare-branding.sh` requires `librsvg2-bin` and renders the source SVG to a deterministic 640x480 PNG. The process is:
+For a normal build, `scripts/prepare-branding.sh` validates the ready PNG with `file` and copies it into generated bootloader themes. `rsvg-convert` and `librsvg2-bin` are required only for the explicit `--regenerate` mode. The process is:
 
 ```text
-assets/chepian-apple.svg
+assets/chepian-apple.svg --regenerate only--> assets/chepian-splash.png
+assets/chepian-splash.png
         -> scripts/prepare-branding.sh
         -> config/bootloaders/isolinux/splash.png  (BIOS/ISOLINUX)
         -> config/bootloaders/grub/splash.png      (UEFI/GRUB)
         -> live-build hybrid ISO
 ```
 
-The script copies the live-build bootloader templates from `/usr/share/live/build/bootloaders` only into the repository, then replaces product labels while retaining template kernel and initrd commands. It removes a copied `splash.svg` from each generated theme so it cannot replace `splash.png`. The generated `config/bootloaders/` tree is reproducible, ignored by Git, and is never written to `/usr/share/live/build`.
+The script copies the live-build bootloader templates from `/usr/share/live/build/bootloaders` only into the repository, then replaces product labels while retaining template kernel and initrd commands. It verifies that the ISOLINUX configuration actually contains every Chepian label. It removes a copied `splash.svg` from each generated theme so it cannot replace `splash.png`. The generated `config/bootloaders/` tree is reproducible, ignored by Git, and is never written to `/usr/share/live/build`. BIOS/ISOLINUX is guaranteed the graphical splash. GRUB/UEFI keeps textual branding and bootability even if the installed live-build version has no supported graphical theme directory.
 
-Build artifacts are generated only on a Debian builder. Install the branding dependency with `sudo apt update` and `sudo apt install -y librsvg2-bin`. Run `make check`, `make branding`, and then `sudo make build`; branding changes require a full clean rebuild. `scripts/build.sh` runs the live-build lifecycle from the repository root, validates both generated splash PNG dimensions, validates the expected hybrid ISO, and writes a versioned ISO plus SHA-256 checksum. `scripts/clean.sh` delegates cleanup to `lb clean --purge` from that same root.
+Build artifacts are generated only on a Debian builder. Run `make check` and `sudo ./scripts/build.sh`; branding changes require a full clean rebuild. To regenerate the ready PNG, install `librsvg2-bin` with `sudo apt update` and `sudo apt install -y librsvg2-bin`, then run `make branding-regenerate`. `scripts/build.sh` runs `lb clean`, `lb config`, branding preparation, splash validation, and `lb build` from the repository root. It validates the expected hybrid ISO and writes a versioned ISO plus SHA-256 checksum. `scripts/clean.sh` delegates cleanup to `lb clean --purge` from that same root.

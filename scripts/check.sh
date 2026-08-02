@@ -22,6 +22,7 @@ required_files=(
   config/includes.chroot/etc/motd
   config/hooks/live/0100-chepian-config.hook.chroot
   assets/chepian-apple.svg
+  assets/chepian-splash.png
   scripts/build.sh
   scripts/clean.sh
   scripts/check.sh
@@ -72,6 +73,21 @@ if grep -Ein "(href|xlink:href)=[\"'](https?:)?//|<(script|foreignObject)([[:spa
   exit 1
 fi
 
+if git check-ignore -q assets/chepian-splash.png; then
+  printf '%s\n' 'check.sh: ready splash PNG must not be ignored' >&2
+  exit 1
+fi
+
+if ! git ls-files --error-unmatch -- assets/chepian-splash.png >/dev/null 2>&1; then
+  printf '%s\n' 'check.sh: ready splash PNG must be tracked by Git' >&2
+  exit 1
+fi
+
+if command -v file >/dev/null 2>&1 && ! file -b assets/chepian-splash.png | grep -Eq '^PNG image data, 640 x 480'; then
+  printf '%s\n' 'check.sh: ready splash PNG must be 640x480' >&2
+  exit 1
+fi
+
 for field in 'ID=chepian' 'ID_LIKE=debian'; do
   if ! grep -qxF "$field" config/includes.chroot/usr/lib/os-release; then
     printf '%s\n' "check.sh: os-release is missing $field" >&2
@@ -79,8 +95,30 @@ for field in 'ID=chepian' 'ID_LIKE=debian'; do
   fi
 done
 
-if ! grep -qxF 'systemctl set-default multi-user.target' config/hooks/live/0100-chepian-config.hook.chroot; then
+if ! grep -qF 'systemctl set-default multi-user.target' config/hooks/live/0100-chepian-config.hook.chroot; then
   printf '%s\n' 'check.sh: chroot hook must set multi-user.target as default' >&2
+  exit 1
+fi
+
+for fallback_path in /lib/systemd/system/multi-user.target /etc/systemd/system/default.target; do
+  if ! grep -qF "$fallback_path" config/hooks/live/0100-chepian-config.hook.chroot; then
+    printf '%s\n' "check.sh: chroot hook is missing default target fallback: $fallback_path" >&2
+    exit 1
+  fi
+done
+
+if ! grep -qF 'exec sudo --' config/includes.chroot/usr/bin/chep; then
+  printf '%s\n' 'check.sh: chep must safely re-exec through sudo' >&2
+  exit 1
+fi
+
+if grep -qF 'eval' config/includes.chroot/usr/bin/chep; then
+  printf '%s\n' 'check.sh: chep must not use eval' >&2
+  exit 1
+fi
+
+if ! grep -qF 'if [[ "$regenerate" == true ]]' scripts/prepare-branding.sh; then
+  printf '%s\n' 'check.sh: rsvg-convert must be limited to --regenerate mode' >&2
   exit 1
 fi
 

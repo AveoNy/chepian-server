@@ -1,8 +1,8 @@
 # Repository Guidelines
 
 - OpenCode runs on Windows and must not run `sudo`, `live-build`, `debootstrap`, QEMU, or Linux build commands there.
-- Generate PNG branding assets only on the Debian builder.
-- The branding source is `assets/chepian-apple.svg`; it must remain an original, symmetric red-and-green apple without a bite.
+- Generate a replacement PNG branding asset only on the Debian builder.
+- Branding consists of editable `assets/chepian-apple.svg` and tracked ready-to-build `assets/chepian-splash.png`. The logo must remain an original, symmetric red-and-green apple without a bite.
 - Do not use the Apple Inc. logo or download third-party logos.
 - Do not modify `/usr/share/live/build`; copy templates only into this repository.
 - Do not run destructive disk commands, including partitioning, formatting, or raw-device writes.

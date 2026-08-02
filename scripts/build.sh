@@ -14,14 +14,12 @@ log_file="$repo_root/build.log"
 : > "$log_file"
 exec > >(tee -a "$log_file") 2>&1
 
-for dependency in lb od sha256sum; do
+for dependency in lb file od sha256sum; do
   if ! command -v "$dependency" >/dev/null 2>&1; then
     printf '%s\n' "build.sh: required command is missing: $dependency" >&2
     exit 1
   fi
 done
-
-bash "$repo_root/scripts/prepare-branding.sh"
 
 png_dimensions() {
   local png_file="$1"
@@ -38,17 +36,16 @@ png_dimensions() {
   [[ "$width" == 640 && "$height" == 480 ]]
 }
 
-for splash in \
-  "$repo_root/config/bootloaders/isolinux/splash.png" \
-  "$repo_root/config/bootloaders/grub/splash.png"; do
-  if [[ ! -f "$splash" ]] || ! png_dimensions "$splash"; then
-    printf '%s\n' "build.sh: expected 640x480 splash image is missing or invalid: $splash" >&2
-    exit 1
-  fi
-done
-
 lb clean
 lb config
+bash "$repo_root/scripts/prepare-branding.sh"
+
+splash="$repo_root/config/bootloaders/isolinux/splash.png"
+if [[ ! -f "$splash" ]] || ! png_dimensions "$splash"; then
+  printf '%s\n' "build.sh: expected 640x480 ISOLINUX splash image is missing or invalid: $splash" >&2
+  exit 1
+fi
+
 lb build
 
 output_name="chepian-server-0.1.0-amd64.iso"

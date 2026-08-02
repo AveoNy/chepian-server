@@ -7,7 +7,7 @@
 /*.iso
 /*.iso.sha256
 
-# Reproducible bootloader themes generated from assets/chepian-apple.svg
+# Reproducible bootloader themes generated from the tracked ready splash PNG
 /config/bootloaders/
 
 # Temporary files

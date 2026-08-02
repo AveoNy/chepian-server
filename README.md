@@ -13,9 +13,9 @@ Chepian Server is a minimal, text-only Debian 13 (trixie) live server ISO for am
 
 ## Branding
 
-The original branding source is `assets/chepian-apple.svg`. It is a minimal, symmetric red-and-green whole apple without a bite, created for Chepian Server. It is not an Apple Inc. logo or a derivative of a third-party trademark.
+`assets/chepian-apple.svg` is the editable original branding source. `assets/chepian-splash.png` is the tracked, ready-to-build 640x480 splash image. The image is a minimal, symmetric red-and-green whole apple without a bite, created for Chepian Server. It is not an Apple Inc. logo or a derivative of a third-party trademark.
 
-On the Debian builder, `scripts/prepare-branding.sh` renders this SVG deterministically to 640x480 `splash.png` files in generated `config/bootloaders/isolinux/` and `config/bootloaders/grub/`. The generated themes copy live-build templates into the repository, set Chepian menu text, and use the PNG through the supported live-build bootloader configuration path. ISOLINUX is branded for BIOS; GRUB receives the same black-background branding for UEFI. Generated bootloader files are reproducible and intentionally ignored by Git.
+Normal builds use the ready PNG and do not require `rsvg-convert` or `librsvg2-bin`. To deliberately replace the PNG from the SVG, run `make branding-regenerate` on Debian; only this mode requires `rsvg-convert` from `librsvg2-bin`. The generated themes copy live-build templates into the repository, set Chepian menu text, and use the PNG through the supported live-build configuration path. BIOS/ISOLINUX is guaranteed to use the graphical splash. UEFI/GRUB remains bootable with textual Chepian branding; its graphical background depends on the live-build template support available on the builder. Generated bootloader files are reproducible and intentionally ignored by Git.
 
 ## Build on Debian 13
 
@@ -23,12 +23,12 @@ Run these commands on a Debian 13 amd64 builder, not on Windows:
 
 ```sh
 sudo apt update
-sudo apt install -y live-build shellcheck librsvg2-bin
+sudo apt install -y live-build shellcheck
 git clone https://github.com/AveoNy/chepian-server.git
 cd chepian-server
 make check
 make branding
-sudo make build
+sudo ./scripts/build.sh
 ```
 
 The build produces `chepian-server-0.1.0-amd64.iso` and its SHA-256 checksum in the repository root.
@@ -39,12 +39,13 @@ The build produces `chepian-server-0.1.0-amd64.iso` and its SHA-256 checksum in 
 make help
 make check
 make branding
+make branding-regenerate
 make configure
 sudo make build
 sudo make clean
 ```
 
-`/usr/bin/chep` is a small frontend for `apt-get`, `apt-cache`, and `dpkg-query`. Run `chep help` in the live system for usage.
+`/usr/bin/chep` is a small frontend for `apt-get`, `apt-cache`, and `dpkg-query`. For system-changing operations it safely re-executes itself through `sudo`, so `chep install nginx` works for a permitted user. Package installation still always runs with root privileges. Run `chep help` in the live system for usage.
 
 ## Layout
 
