@@ -140,7 +140,7 @@ if ! grep -qF 'chep_escalate' "$package_module"; then
   exit 1
 fi
 
-for read_command in 'apt-cache "$command"' 'dpkg-query -W'; do
+for read_command in "apt-cache \"\$command\"" "dpkg-query -W"; do
   if ! grep -qF -- "$read_command" "$package_module"; then
     printf '%s\n' "check.sh: package.sh read operation is missing: $read_command" >&2
     exit 1
