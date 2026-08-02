@@ -6,8 +6,8 @@ if (( EUID != 0 )); then
   exit 1
 fi
 
-script_dir="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)"
-repo_root="$(CDPATH= cd -- "$script_dir/.." && pwd -P)"
+script_dir="$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd -P)"
+repo_root="$(CDPATH='' cd -- "$script_dir/.." && pwd -P)"
 cd "$repo_root"
 
 lb clean --purge
