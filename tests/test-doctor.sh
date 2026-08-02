@@ -3,9 +3,9 @@ set -euo pipefail
 
 repo_root="$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd -P)"
 lib="$repo_root/config/includes.chroot/usr/lib/chep"
-# shellcheck source=../config/includes.chroot/usr/lib/chep/common.sh
+# shellcheck source=config/includes.chroot/usr/lib/chep/common.sh
 source "$lib/common.sh"
-# shellcheck source=../config/includes.chroot/usr/lib/chep/doctor.sh
+# shellcheck source=config/includes.chroot/usr/lib/chep/doctor.sh
 source "$lib/doctor.sh"
 
 redacted="$(printf '%s\n' 'password=example token: value api_key=key' | doctor_redact)"
