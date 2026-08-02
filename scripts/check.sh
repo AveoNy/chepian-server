@@ -16,6 +16,9 @@ required_files=(
   auto/clean
   config/package-lists/chepian-server.list.chroot
   config/includes.chroot/usr/bin/chep
+  config/includes.chroot/usr/lib/chep/common.sh
+  config/includes.chroot/usr/lib/chep/package.sh
+  config/includes.chroot/usr/lib/chep/doctor.sh
   config/includes.chroot/usr/lib/os-release
   config/includes.chroot/etc/issue
   config/includes.chroot/etc/issue.net
@@ -27,6 +30,9 @@ required_files=(
   scripts/clean.sh
   scripts/check.sh
   scripts/prepare-branding.sh
+  tests/test-chep.sh
+  tests/test-package.sh
+  tests/test-doctor.sh
   docs/architecture.md
 )
 
@@ -41,11 +47,17 @@ shell_files=(
   auto/config
   auto/clean
   config/includes.chroot/usr/bin/chep
+  config/includes.chroot/usr/lib/chep/common.sh
+  config/includes.chroot/usr/lib/chep/package.sh
+  config/includes.chroot/usr/lib/chep/doctor.sh
   config/hooks/live/0100-chepian-config.hook.chroot
   scripts/build.sh
   scripts/clean.sh
   scripts/check.sh
   scripts/prepare-branding.sh
+  tests/test-chep.sh
+  tests/test-package.sh
+  tests/test-doctor.sh
 )
 
 if ! command -v shellcheck >/dev/null 2>&1; then
@@ -147,6 +159,18 @@ if grep -qF 'rm -rf' scripts/prepare-branding.sh; then
   exit 1
 fi
 
+if grep -R -q --include='*.sh' --include='chep' 'eval' config/includes.chroot/usr/bin/chep config/includes.chroot/usr/lib/chep; then
+  printf '%s\n' 'check.sh: chep modules must not use eval' >&2
+  exit 1
+fi
+
+for executable in config/includes.chroot/usr/bin/chep scripts/prepare-branding.sh tests/test-chep.sh tests/test-package.sh tests/test-doctor.sh; do
+  if [[ ! -x "$executable" ]]; then
+    printf '%s\n' "check.sh: expected executable file: $executable" >&2
+    exit 1
+  fi
+done
+
 if awk '!/^[[:space:]]*($|#)/ { print $1 }' config/package-lists/chepian-server.list.chroot | \
   grep -Eix 'xorg|xserver-xorg.*|xwayland|weston|cage|sway|wayfire|kwin-wayland|mutter|gnome.*|xfce.*|kde.*|plasma.*|task-.*desktop|lightdm|gdm3|sddm|slim|nodm|lxdm|xdm'; then
   printf '%s\n' 'check.sh: graphical package found in package list' >&2
@@ -168,5 +192,9 @@ for label in "${required_menu_labels[@]}"; do
     exit 1
   fi
 done
+
+bash tests/test-chep.sh
+bash tests/test-package.sh
+bash tests/test-doctor.sh
 
 printf '%s\n' 'check.sh: all checks passed'

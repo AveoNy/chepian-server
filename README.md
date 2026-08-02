@@ -1,10 +1,12 @@
 # Chepian Server
 
+> Development preview: `0.2.0-dev` adds modular Chep operations and offline-safe diagnostics. It is not a final 0.2.0 release.
+
 Chepian Server is a minimal, text-only Debian 13 (trixie) live server ISO for amd64 systems. It supports BIOS and UEFI boot, includes the text Debian Installer, and has no graphical environment.
 
 ## Defaults
 
-- Version: `0.1.0`
+- Version: `0.2.0-dev`
 - Live hostname: `chepian`
 - Live user: `chep`
 - Primary locale: `en_US.UTF-8`
@@ -45,7 +47,20 @@ sudo make build
 sudo make clean
 ```
 
-`/usr/bin/chep` is a small frontend for `apt-get`, `apt-cache`, and `dpkg-query`. For system-changing operations it safely re-executes itself through `sudo`, so `chep install nginx` works for a permitted user. Package installation still always runs with root privileges. Run `chep help` in the live system for usage.
+`/usr/bin/chep` is a modular frontend for `apt-get`, `apt-cache`, and `dpkg-query`. For system-changing operations it safely re-executes itself through `sudo`, so `chep install nginx` works for a permitted user. Package installation still always runs with root privileges.
+
+## Doctor
+
+```sh
+chep doctor
+chep doctor memory
+chep doctor security
+chep doctor --collect
+```
+
+`doctor` reports system, CPU, memory, disk, network, service, and security observations. Exit codes are `0` (OK), `1` (warnings), `2` (failures), and `3` (usage/internal error). `--collect` creates a redacted support archive and never includes shadow files, SSH keys, environment dumps, history, or credentials.
+
+Chep modules are installed below `/usr/lib/chep`: `common.sh`, `package.sh`, and `doctor.sh`. This Offline Ops Preview does not provide profiles or bundles.
 
 ## Layout
 

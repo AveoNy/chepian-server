@@ -25,6 +25,7 @@ cron
 logrotate
 rsyslog
 systemd-timesyncd
+systemd
 iproute2
 iputils-ping
 dnsutils
@@ -35,3 +36,7 @@ traceroute
 locales
 console-setup
 keyboard-configuration
+procps
+util-linux
+tar
+gzip

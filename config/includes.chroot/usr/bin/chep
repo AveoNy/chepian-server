@@ -1,107 +1,58 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION="0.1.0"
+CHEP_VERSION="0.2.0-dev"
+CHEP_PROGRAM="$0"
+CHEP_LIB_DIR="${CHEP_LIB_DIR:-/usr/lib/chep}"
 
 usage() {
   cat <<'EOF'
 Usage: chep <command> [arguments]
 
-Commands:
-  update                  Refresh package indexes
-  install <packages>      Install one or more packages
-  remove <packages>       Remove one or more packages
-  purge <packages>        Purge one or more packages
-  search <text>           Search package metadata
-  show <package>          Show package details
-  upgrade                 Upgrade installed packages
-  autoremove              Remove unused dependencies
-  clean                   Clear downloaded package files
-  list                    List installed packages
-  version                 Show Chep and backend versions
-  help                    Show this help
+Package commands: update, install, remove, purge, search, show, upgrade,
+                  autoremove, clean, list
+Operations:       doctor [system|cpu|memory|disk|network|services|security|--collect]
+Information:      version, help
 EOF
 }
 
-require_root() {
-  if (( EUID != 0 )); then
-    if ! command -v sudo >/dev/null 2>&1; then
-      printf '%s\n' 'chep: this operation requires root privileges and sudo is unavailable' >&2
-      exit 1
-    fi
-    exec sudo -- "$0" "$original_command" "${remaining_arguments[@]}"
+load_module() {
+  local module="$1"
+  local path="$CHEP_LIB_DIR/$module"
+  if [[ ! -f "$path" ]]; then
+    printf 'chep: required module is missing: %s\n' "$path" >&2
+    exit 3
   fi
+  # Modules are shipped with Chepian and loaded only from CHEP_LIB_DIR.
+  source "$path"
 }
 
-require_arguments() {
-  local command="$1"
-  shift
-
-  if (( $# == 0 )); then
-    printf '%s\n' "chep: $command requires at least one argument" >&2
-    exit 2
-  fi
-}
-
-original_command="${1:-help}"
-command_name="$original_command"
+command_name="${1:-help}"
 if (( $# > 0 )); then
   shift
 fi
-remaining_arguments=("$@")
+command_arguments=("$@")
 
 case "$command_name" in
-  update)
-    require_root
-    apt-get update
-    ;;
-  install)
-    require_arguments install "$@"
-    require_root
-    apt-get install "$@"
-    ;;
-  remove)
-    require_arguments remove "$@"
-    require_root
-    apt-get remove "$@"
-    ;;
-  purge)
-    require_arguments purge "$@"
-    require_root
-    apt-get purge "$@"
-    ;;
-  search)
-    require_arguments search "$@"
-    apt-cache search "$@"
-    ;;
-  show)
-    require_arguments show "$@"
-    apt-cache show "$@"
-    ;;
-  upgrade)
-    require_root
-    apt-get upgrade
-    ;;
-  autoremove)
-    require_root
-    apt-get autoremove
-    ;;
-  clean)
-    require_root
-    apt-get clean
-    ;;
-  list)
-    dpkg-query -W -f='${binary:Package}\t${Version}\t${db:Status-Abbrev}\n'
-    ;;
-  version)
-    printf 'Chepian Server chep %s\n' "$VERSION"
-    printf 'Backend: apt/dpkg\n'
-    ;;
   help|-h|--help)
     usage
     ;;
+  version)
+    printf 'Chepian Server chep %s\n' "$CHEP_VERSION"
+    printf '%s\n' 'Backend: apt/dpkg'
+    ;;
+  update|install|remove|purge|search|show|upgrade|autoremove|clean|list)
+    load_module common.sh
+    load_module package.sh
+    chep_package_command "$command_name" "${command_arguments[@]}"
+    ;;
+  doctor)
+    load_module common.sh
+    load_module doctor.sh
+    chep_doctor "${command_arguments[@]}"
+    ;;
   *)
-    printf '%s\n' "chep: unknown command: $command_name" >&2
+    printf 'chep: unknown command: %s\n' "$command_name" >&2
     usage >&2
     exit 2
     ;;

@@ -1,7 +1,7 @@
-PRETTY_NAME="Chepian Server 0.1.0"
+PRETTY_NAME="Chepian Server 0.2.0-dev"
 NAME="Chepian Server"
-VERSION_ID="0.1.0"
-VERSION="0.1.0 (trixie)"
+VERSION_ID="0.2.0-dev"
+VERSION="0.2.0-dev (trixie)"
 VERSION_CODENAME=trixie
 ID=chepian
 ID_LIKE=debian

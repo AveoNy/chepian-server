@@ -1,7 +1,10 @@
+* text=auto eol=lf
 *.sh text eol=lf
+*.md text eol=lf
 *.svg text eol=lf
+*.list.chroot text eol=lf
+**/os-release text eol=lf
 auto/* text eol=lf
 config/hooks/live/* text eol=lf
-config/includes.chroot/usr/bin/chep text eol=lf
 Makefile text eol=lf
 *.png binary
