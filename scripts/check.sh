@@ -122,6 +122,20 @@ if ! grep -qF "if [[ \"\$regenerate\" == true ]]" scripts/prepare-branding.sh; t
   exit 1
 fi
 
+for branding_requirement in \
+  'prepare_bootloader_files isolinux' \
+  'prepare_bootloader_files syslinux_common' \
+  'syslinux_common/splash.png' \
+  'syslinux_common/splash.svg' \
+  "-name '*.cfg.in'" \
+  'Start Chepian Server Live' \
+  'Install Chepian Server'; do
+  if ! grep -qF -- "$branding_requirement" scripts/prepare-branding.sh; then
+    printf '%s\n' "check.sh: prepare-branding.sh is missing: $branding_requirement" >&2
+    exit 1
+  fi
+done
+
 if awk '!/^[[:space:]]*($|#)/ { print $1 }' config/package-lists/chepian-server.list.chroot | \
   grep -Eix 'xorg|xserver-xorg.*|xwayland|weston|cage|sway|wayfire|kwin-wayland|mutter|gnome.*|xfce.*|kde.*|plasma.*|task-.*desktop|lightdm|gdm3|sddm|slim|nodm|lxdm|xdm'; then
   printf '%s\n' 'check.sh: graphical package found in package list' >&2
