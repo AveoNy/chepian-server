@@ -1,0 +1,17 @@
+#!/bin/sh
+set -eu
+
+printf '%s\n' 'chepian' > /etc/hostname
+ln -sfn /usr/lib/os-release /etc/os-release
+
+sed -i \
+  -e '/^[#[:space:]]*en_US\.UTF-8 UTF-8$/d' \
+  -e '/^[#[:space:]]*ru_RU\.UTF-8 UTF-8$/d' \
+  /etc/locale.gen
+printf '%s\n' 'en_US.UTF-8 UTF-8' 'ru_RU.UTF-8 UTF-8' >> /etc/locale.gen
+locale-gen
+printf '%s\n' 'LANG=en_US.UTF-8' > /etc/default/locale
+
+mkdir -p /etc/ssh/sshd_config.d
+printf '%s\n' 'PermitRootLogin no' > /etc/ssh/sshd_config.d/99-chepian.conf
+systemctl enable ssh.service

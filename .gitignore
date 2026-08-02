@@ -1,0 +1,18 @@
+# live-build artifacts
+/chroot/
+/binary/
+/cache/
+/build/
+/build.log
+/*.iso
+/*.iso.sha256
+
+# Temporary files
+*.tmp
+*.temp
+*~
+*.swp
+*.swo
+
+# Local OpenCode data
+/.opencode/

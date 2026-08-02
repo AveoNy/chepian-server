@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+VERSION="0.1.0"
+
+usage() {
+  cat <<'EOF'
+Usage: chep <command> [arguments]
+
+Commands:
+  update                  Refresh package indexes
+  install <packages>      Install one or more packages
+  remove <packages>       Remove one or more packages
+  purge <packages>        Purge one or more packages
+  search <text>           Search package metadata
+  show <package>          Show package details
+  upgrade                 Upgrade installed packages
+  autoremove              Remove unused dependencies
+  clean                   Clear downloaded package files
+  list                    List installed packages
+  version                 Show Chep and backend versions
+  help                    Show this help
+EOF
+}
+
+require_root() {
+  if (( EUID != 0 )); then
+    printf '%s\n' 'chep: this command must be run as root' >&2
+    exit 1
+  fi
+}
+
+require_arguments() {
+  local command="$1"
+  shift
+
+  if (( $# == 0 )); then
+    printf '%s\n' "chep: $command requires at least one argument" >&2
+    exit 2
+  fi
+}
+
+command_name="${1:-help}"
+if (( $# > 0 )); then
+  shift
+fi
+
+case "$command_name" in
+  update)
+    require_root
+    apt-get update
+    ;;
+  install)
+    require_arguments install "$@"
+    require_root
+    apt-get install "$@"
+    ;;
+  remove)
+    require_arguments remove "$@"
+    require_root
+    apt-get remove "$@"
+    ;;
+  purge)
+    require_arguments purge "$@"
+    require_root
+    apt-get purge "$@"
+    ;;
+  search)
+    require_arguments search "$@"
+    apt-cache search "$@"
+    ;;
+  show)
+    require_arguments show "$@"
+    apt-cache show "$@"
+    ;;
+  upgrade)
+    require_root
+    apt-get upgrade
+    ;;
+  autoremove)
+    require_root
+    apt-get autoremove
+    ;;
+  clean)
+    require_root
+    apt-get clean
+    ;;
+  list)
+    dpkg-query -W -f='${binary:Package}\t${Version}\t${db:Status-Abbrev}\n'
+    ;;
+  version)
+    printf 'Chepian Server chep %s\n' "$VERSION"
+    printf 'Backend: apt/dpkg\n'
+    ;;
+  help|-h|--help)
+    usage
+    ;;
+  *)
+    printf '%s\n' "chep: unknown command: $command_name" >&2
+    usage >&2
+    exit 2
+    ;;
+esac
