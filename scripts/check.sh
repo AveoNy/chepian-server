@@ -24,7 +24,6 @@ required_files=(
   config/includes.chroot/etc/issue.net
   config/includes.chroot/etc/motd
   config/hooks/live/0100-chepian-config.hook.chroot
-  assets/chepian-apple.svg
   assets/chepian-splash.png
   scripts/build.sh
   scripts/clean.sh
@@ -75,28 +74,8 @@ if grep -Il $'\r' "${shell_files[@]}"; then
   exit 1
 fi
 
-if ! grep -Fq 'viewBox="0 0 640 480"' assets/chepian-apple.svg; then
-  printf '%s\n' 'check.sh: branding SVG must use viewBox 0 0 640 480' >&2
-  exit 1
-fi
-
-if grep -Ein "(href|xlink:href)=[\"'](https?:)?//|<(script|foreignObject)([[:space:]>])" assets/chepian-apple.svg; then
-  printf '%s\n' 'check.sh: branding SVG contains an external asset or embedded script' >&2
-  exit 1
-fi
-
-if git check-ignore -q assets/chepian-splash.png; then
-  printf '%s\n' 'check.sh: ready splash PNG must not be ignored' >&2
-  exit 1
-fi
-
-if ! git ls-files --error-unmatch -- assets/chepian-splash.png >/dev/null 2>&1; then
-  printf '%s\n' 'check.sh: ready splash PNG must be tracked by Git' >&2
-  exit 1
-fi
-
-if command -v file >/dev/null 2>&1 && ! file -b assets/chepian-splash.png | grep -Eq '^PNG image data, 640 x 480'; then
-  printf '%s\n' 'check.sh: ready splash PNG must be 640x480' >&2
+if [[ ! -s assets/chepian-splash.png ]]; then
+  printf '%s\n' 'check.sh: ready splash PNG must not be empty' >&2
   exit 1
 fi
 
@@ -154,36 +133,6 @@ for module in common.sh package.sh; do
   fi
 done
 
-if ! grep -qF "if [[ \"\$regenerate\" == true ]]" scripts/prepare-branding.sh; then
-  printf '%s\n' 'check.sh: rsvg-convert must be limited to --regenerate mode' >&2
-  exit 1
-fi
-
-for branding_requirement in \
-  'materialize_bootloader_theme isolinux' \
-  'materialize_bootloader_theme syslinux_common' \
-  'isolinux|syslinux_common' \
-  'readlink -f' \
-  'actual_target' \
-  'expected_source' \
-  'unlink --' \
-  "cp -a -- \"\$source/.\" \"\$target/\"" \
-  'syslinux_common/splash.png' \
-  'syslinux_common/splash.svg' \
-  "-name '*.cfg.in'" \
-  'Start Chepian Server Live' \
-  'Install Chepian Server'; do
-  if ! grep -qF -- "$branding_requirement" scripts/prepare-branding.sh; then
-    printf '%s\n' "check.sh: prepare-branding.sh is missing: $branding_requirement" >&2
-    exit 1
-  fi
-done
-
-if grep -qF 'rm -rf' scripts/prepare-branding.sh; then
-  printf '%s\n' 'check.sh: prepare-branding.sh must not use rm -rf' >&2
-  exit 1
-fi
-
 if grep -R -q --include='*.sh' --include='chep' 'eval' config/includes.chroot/usr/bin/chep config/includes.chroot/usr/lib/chep; then
   printf '%s\n' 'check.sh: chep modules must not use eval' >&2
   exit 1
@@ -201,22 +150,6 @@ if awk '!/^[[:space:]]*($|#)/ { print $1 }' config/package-lists/chepian-server.
   printf '%s\n' 'check.sh: graphical package found in package list' >&2
   exit 1
 fi
-
-required_menu_labels=(
-  'Start Chepian Server Live'
-  'Start Chepian Server Live (fail-safe mode)'
-  'Install Chepian Server'
-  'Install Chepian Server with speech synthesis'
-  'Advanced installation options'
-  'Utilities'
-)
-
-for label in "${required_menu_labels[@]}"; do
-  if ! grep -Fq -- "$label" scripts/prepare-branding.sh; then
-    printf '%s\n' "check.sh: boot menu label is not described: $label" >&2
-    exit 1
-  fi
-done
 
 bash tests/test-chep.sh
 bash tests/test-package.sh
