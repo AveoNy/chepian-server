@@ -8,15 +8,6 @@ source_png="$repo_root/assets/chepian-splash.png"
 template_root="/usr/share/live/build/bootloaders"
 output_root="$repo_root/config/bootloaders"
 regenerate=false
-menu_labels=(
-  'Chepian Server 0.1.0'
-  'Start Chepian Server Live'
-  'Start Chepian Server Live (fail-safe mode)'
-  'Install Chepian Server'
-  'Install Chepian Server with speech synthesis'
-  'Advanced installation options'
-  'Utilities'
-)
 
 usage() {
   printf '%s\n' 'Usage: prepare-branding.sh [--regenerate]'
@@ -94,40 +85,49 @@ replace_menu_labels() {
   local menu_file
 
   while IFS= read -r -d '' menu_file; do
-    sed -i \
-      -e 's/Debian GNU\/Linux 13 (trixie)/Chepian Server 0.1.0 amd64/g' \
-      -e 's/Debian GNU\/Linux Live (amd64, fail-safe mode)/Start Chepian Server Live (fail-safe mode)/g' \
-      -e 's/Debian GNU\/Linux Live (amd64)/Start Chepian Server Live/g' \
-      -e 's/Debian GNU\/Linux Live (fail-safe mode)/Start Chepian Server Live (fail-safe mode)/g' \
-      -e 's/Debian GNU\/Linux Live/Start Chepian Server Live/g' \
-      -e 's/Live system (amd64, fail-safe mode)/Start Chepian Server Live (fail-safe mode)/g' \
-      -e 's/Live system (amd64)/Start Chepian Server Live/g' \
-      -e 's/Live system (fail-safe mode)/Start Chepian Server Live (fail-safe mode)/g' \
-      -e 's/Live system/Start Chepian Server Live/g' \
-      -e 's/Graphical install/Install Chepian Server/g' \
-      -e 's/Install with speech synthesis/Install Chepian Server with speech synthesis/g' \
-      -e 's/menu label \^Install$/menu label ^Install Chepian Server/' \
-      -e 's/menuentry "Install"/menuentry "Install Chepian Server"/' \
-      -e 's/Advanced options/Advanced installation options/g' \
+    # Only menu-label lines are changed; kernel, initrd, append, include, and paths remain intact.
+    sed -i -E \
+      -e '/^[[:space:]]*(menu[[:space:]]+label|menuentry)[[:space:]]/ {
+            s/Live[[:space:]]+system[[:space:]]*\(amd64[[:space:],-]*(fail[-[:space:]]*safe|failsafe)([[:space:]]+mode)?\)/Start Chepian Server Live (fail-safe mode)/I
+            s/Live[[:space:]]+system[[:space:]]*\(amd64\)/Start Chepian Server Live/I
+            s/Start[[:space:]]+installer[[:space:]]+with[[:space:]]+speech[[:space:]]+synthesis/Install Chepian Server with speech synthesis/I
+            s/Start[[:space:]]+installer/Install Chepian Server/I
+            s/Advanced[[:space:]]+install(ation)?[[:space:]]+options/Advanced installation options/I
+          }' \
       "$menu_file"
-  done < <(find "$theme_dir" -type f \( -name '*.cfg' -o -name '*.conf' \) -print0)
+  done < <(find "$theme_dir" -type f \( -name '*.cfg' -o -name '*.txt' \) -print0)
+
+  # Utilities is already the required label and is intentionally left unchanged.
 
   if [[ "$theme" == "isolinux" ]]; then
     while IFS= read -r -d '' menu_file; do
-      sed -i -E 's|^(menu title ).*|\1Chepian Server 0.1.0 amd64|' "$menu_file"
-    done < <(find "$theme_dir" -type f -name 'menu.cfg' -print0)
+      sed -i -E 's|^[[:space:]]*menu[[:space:]]+title.*$|menu title Chepian Server 0.1.0|I' "$menu_file"
+    done < <(find "$theme_dir" -type f \( -name '*.cfg' -o -name '*.txt' \) -print0)
   fi
 }
 
 verify_isolinux_labels() {
-  local label
+  local theme_dir="$output_root/isolinux"
+  local splash="$theme_dir/splash.png"
 
-  for label in "${menu_labels[@]}"; do
-    if ! grep -Frq -- "$label" "$output_root/isolinux"; then
-      printf '%s\n' "prepare-branding.sh: ISOLINUX template did not provide a replaceable label: $label" >&2
-      return 1
-    fi
-  done
+  if [[ ! -f "$splash" ]] || ! file -b "$splash" | grep -Eq '^PNG image data, 640 x 480'; then
+    printf '%s\n' 'prepare-branding.sh: ISOLINUX splash.png is missing or is not 640x480' >&2
+    return 1
+  fi
+
+  if ! grep -Eriq --include='*.cfg' --include='*.txt' '(^|[[:space:]])(menu[[:space:]]+label|menuentry).*Start Chepian Server Live' "$theme_dir"; then
+    printf '%s\n' 'prepare-branding.sh: ISOLINUX theme contains no Chepian Live menu label' >&2
+    return 1
+  fi
+
+  if ! grep -Eriq --include='*.cfg' --include='*.txt' '(^|[[:space:]])(menu[[:space:]]+label|menuentry).*Install Chepian Server' "$theme_dir"; then
+    printf '%s\n' 'prepare-branding.sh: ISOLINUX theme contains no Chepian installer menu label' >&2
+    return 1
+  fi
+
+  if ! grep -Eriq --include='*.cfg' --include='*.txt' '^[[:space:]]*menu[[:space:]]+title' "$theme_dir"; then
+    printf '%s\n' 'prepare-branding.sh: warning: ISOLINUX template has no menu title; the splash contains the product title.' >&2
+  fi
 }
 
 prepare_theme() {

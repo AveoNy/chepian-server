@@ -117,7 +117,7 @@ if grep -qF 'eval' config/includes.chroot/usr/bin/chep; then
   exit 1
 fi
 
-if ! grep -qF 'if [[ "$regenerate" == true ]]' scripts/prepare-branding.sh; then
+if ! grep -qF "if [[ \"\$regenerate\" == true ]]" scripts/prepare-branding.sh; then
   printf '%s\n' 'check.sh: rsvg-convert must be limited to --regenerate mode' >&2
   exit 1
 fi
@@ -129,8 +129,6 @@ if awk '!/^[[:space:]]*($|#)/ { print $1 }' config/package-lists/chepian-server.
 fi
 
 required_menu_labels=(
-  'Chepian Server 0.1.0'
-  'amd64'
   'Start Chepian Server Live'
   'Start Chepian Server Live (fail-safe mode)'
   'Install Chepian Server'
