@@ -123,8 +123,14 @@ if ! grep -qF "if [[ \"\$regenerate\" == true ]]" scripts/prepare-branding.sh; t
 fi
 
 for branding_requirement in \
-  'prepare_bootloader_files isolinux' \
-  'prepare_bootloader_files syslinux_common' \
+  'materialize_bootloader_theme isolinux' \
+  'materialize_bootloader_theme syslinux_common' \
+  'isolinux|syslinux_common' \
+  'readlink -f' \
+  'actual_target' \
+  'expected_source' \
+  'unlink --' \
+  "cp -a -- \"\$source/.\" \"\$target/\"" \
   'syslinux_common/splash.png' \
   'syslinux_common/splash.svg' \
   "-name '*.cfg.in'" \
@@ -135,6 +141,11 @@ for branding_requirement in \
     exit 1
   fi
 done
+
+if grep -qF 'rm -rf' scripts/prepare-branding.sh; then
+  printf '%s\n' 'check.sh: prepare-branding.sh must not use rm -rf' >&2
+  exit 1
+fi
 
 if awk '!/^[[:space:]]*($|#)/ { print $1 }' config/package-lists/chepian-server.list.chroot | \
   grep -Eix 'xorg|xserver-xorg.*|xwayland|weston|cage|sway|wayfire|kwin-wayland|mutter|gnome.*|xfce.*|kde.*|plasma.*|task-.*desktop|lightdm|gdm3|sddm|slim|nodm|lxdm|xdm'; then

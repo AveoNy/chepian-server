@@ -14,7 +14,7 @@ log_file="$repo_root/build.log"
 : > "$log_file"
 exec > >(tee -a "$log_file") 2>&1
 
-for dependency in lb file od sha256sum; do
+for dependency in lb file od readlink realpath sha256sum; do
   if ! command -v "$dependency" >/dev/null 2>&1; then
     printf '%s\n' "build.sh: required command is missing: $dependency" >&2
     exit 1
@@ -40,9 +40,9 @@ lb clean
 lb config
 bash "$repo_root/scripts/prepare-branding.sh"
 
-splash="$repo_root/config/bootloaders/isolinux/splash.png"
+splash="$repo_root/config/bootloaders/syslinux_common/splash.png"
 if [[ ! -f "$splash" ]] || ! png_dimensions "$splash"; then
-  printf '%s\n' "build.sh: expected 640x480 ISOLINUX splash image is missing or invalid: $splash" >&2
+  printf '%s\n' "build.sh: expected 640x480 Syslinux splash image is missing or invalid: $splash" >&2
   exit 1
 fi
 
